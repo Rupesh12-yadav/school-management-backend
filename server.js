@@ -33,9 +33,27 @@ dotenv.config();
 const app = express();
 
 // CORS setup - frontend se backend ko access karne ki permission de rahe hain
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "http://localhost:3001",
+    "https://school-management-frontend-mu-amber.vercel.app",
+    /https:\/\/school-management-frontend-.*\.vercel\.app$/
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3001", // React frontend ka URL
-    credentials: true, // Cookies aur authentication tokens bhejne ki permission
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.some(allowed => {
+            if (typeof allowed === 'string') return allowed === origin;
+            if (allowed instanceof RegExp) return allowed.test(origin);
+            return false;
+        })) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
 }));
 
 // JSON data ko parse karne ke liye middleware - API requests mein JSON data aata hai
